@@ -2,6 +2,8 @@
 data/
 models/
 metrics/
+# Allow DVC metadata files
+!data/**/*.dvc
 
 # Virtual envs
 venv/
