@@ -1,7 +1,7 @@
 # DVC-tracked data stays out of Git
-data/
-models/
-metrics/
+/data/
+/models/
+/metrics/
 # Allow DVC metadata files
 !data/**/*.dvc
 
@@ -20,3 +20,4 @@ __pycache__/
 .vscode/
 .ipynb_checkpoints/
 *.log
+/models
