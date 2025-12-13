@@ -12,6 +12,7 @@ venv/
 # DVC local creds
 .dvc/gdrive-creds.json
 .dvc/config.local
+env.list
 
 # Caches & misc
 __pycache__/
