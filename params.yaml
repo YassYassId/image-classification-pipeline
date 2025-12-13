@@ -1,0 +1,18 @@
+# Global hyperparameters and options used across DVC stages
+# You can change these and run: dvc repro
+
+# Data/loading
+image_size: 32           # 32 for CNN; MobileNetV2 will internally resize to 96 if needed
+val_split: 0.1           # fraction of training set for validation
+seed: 42
+batch_size: 64
+augment_in_prepare: false  # keep false to save clean processed sets; augmentation happens in training
+
+# Training
+learning_rate: 0.001
+epochs_cnn: 12            # keep small for CPU
+epochs_tl: 10             # transfer learning classifier only, few epochs
+
+# Evaluation
+model_choice: "mobilenetv2"      # one of: ["cnn", "mobilenetv2"]
+# Set to choose which model to evaluate in the evaluate stage

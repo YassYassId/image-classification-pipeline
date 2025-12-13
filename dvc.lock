@@ -1,0 +1,122 @@
+schema: '2.0'
+stages:
+  prepare:
+    cmd: python -u src/prepare.py
+    deps:
+    - path: data/raw/cifar10
+      hash: md5
+      md5: 4a0ebba293c6625be2d1d15efd08914a.dir
+      size: 135659890
+      nfiles: 60000
+    - path: params.yaml
+      hash: md5
+      md5: 02f4039e2349839ce814e33631e35efd
+      size: 716
+    - path: src/prepare.py
+      hash: md5
+      md5: 1b26eaefb483c30cd637216748081e74
+      size: 4148
+    - path: src/utils/helpers.py
+      hash: md5
+      md5: 2dc214164d221bb4c3d70d8cb07a3a3e
+      size: 3740
+    params:
+      params.yaml:
+        augment_in_prepare: false
+        image_size: 32
+        seed: 42
+        val_split: 0.1
+    outs:
+    - path: data/processed
+      hash: md5
+      md5: 2909805742f8cccadd531420d50338e9.dir
+      size: 3530294
+      nfiles: 4
+  train:
+    cmd: python -u src/train.py
+    deps:
+    - path: data/processed/class_names.json
+      hash: md5
+      md5: 35dfbe533abff01e57ee2d8c5e61efdf
+      size: 168
+    - path: data/processed/train.json
+      hash: md5
+      md5: 49c77517e8300e736403931074ca24ab
+      size: 2655042
+    - path: data/processed/val.json
+      hash: md5
+      md5: e2de03aca41ac0ec4baf5abe082c9007
+      size: 295042
+    - path: params.yaml
+      hash: md5
+      md5: 81ee8a14246873fcb11906e25fe4ad05
+      size: 708
+    - path: src/train.py
+      hash: md5
+      md5: 2ba916609e51523d0ff525c40f077ba6
+      size: 5990
+    - path: src/utils/helpers.py
+      hash: md5
+      md5: 2dc214164d221bb4c3d70d8cb07a3a3e
+      size: 3740
+    params:
+      params.yaml:
+        batch_size: 64
+        epochs_cnn: 12
+        epochs_tl: 10
+        image_size: 32
+        learning_rate: 0.001
+        seed: 42
+    outs:
+    - path: metrics/train.json
+      hash: md5
+      md5: 80a4fec2e4537255fb46d99a0978d158
+      size: 591
+    - path: models
+      hash: md5
+      md5: 567b7cfb51841574897e72b8c9391a5f.dir
+      size: 16358412
+      nfiles: 2
+  evaluate:
+    cmd: python -u src/evaluate.py
+    deps:
+    - path: data/processed/class_names.json
+      hash: md5
+      md5: 35dfbe533abff01e57ee2d8c5e61efdf
+      size: 168
+    - path: data/processed/test.json
+      hash: md5
+      md5: 96171f7f170ece23e83d3b3bd6993adb
+      size: 580042
+    - path: models
+      hash: md5
+      md5: 567b7cfb51841574897e72b8c9391a5f.dir
+      size: 16358412
+      nfiles: 2
+    - path: params.yaml
+      hash: md5
+      md5: 81ee8a14246873fcb11906e25fe4ad05
+      size: 708
+    - path: src/evaluate.py
+      hash: md5
+      md5: a0c3857147889d354b36ea87a57bd53f
+      size: 6633
+    - path: src/utils/helpers.py
+      hash: md5
+      md5: 2dc214164d221bb4c3d70d8cb07a3a3e
+      size: 3740
+    params:
+      params.yaml:
+        batch_size: 64
+        image_size: 32
+        model_choice: cnn
+    outs:
+    - path: metrics/eval.json
+      hash: md5
+      md5: faf22fe5736e6fe6e0e60f0ce2b9de2f
+      size: 285
+    - path: metrics/plots
+      hash: md5
+      md5: efc948d8972c996ffcaf0681e291bd08.dir
+      size: 149550
+      nfiles: 2

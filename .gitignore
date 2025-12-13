@@ -1,0 +1,20 @@
+# DVC-tracked data stays out of Git
+data/
+models/
+metrics/
+
+# Virtual envs
+venv/
+.venv/
+
+# DVC local creds
+.dvc/gdrive-creds.json
+.dvc/config.local
+
+# Caches & misc
+__pycache__/
+*.pyc
+.idea/
+.vscode/
+.ipynb_checkpoints/
+*.log

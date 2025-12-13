@@ -1,0 +1,12 @@
+# CPU-friendly requirements
+# TensorFlow CPU build only
+tensorflow-cpu>=2.12,<2.18
+
+# Data & training utils
+numpy>=1.23
+scikit-learn>=1.1
+matplotlib>=3.6
+PyYAML>=6.0
+
+# Pipeline
+dvc[gdrive]>=3.0

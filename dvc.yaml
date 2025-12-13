@@ -1,0 +1,54 @@
+stages:
+  prepare:
+    cmd: python -u src/prepare.py
+    deps:
+      - src/prepare.py
+      - src/utils/helpers.py
+      - params.yaml
+      - data/raw/cifar10
+    params:
+      - image_size
+      - val_split
+      - seed
+      - augment_in_prepare
+    outs:
+      - data/processed
+
+  train:
+    cmd: python -u src/train.py
+    deps:
+      - src/train.py
+      - src/utils/helpers.py
+      - params.yaml
+      - data/processed/class_names.json
+      - data/processed/train.json
+      - data/processed/val.json
+    params:
+      - image_size
+      - batch_size
+      - learning_rate
+      - epochs_cnn
+      - epochs_tl
+      - seed
+    outs:
+      - models
+    metrics:
+      - metrics/train.json
+
+  evaluate:
+    cmd: python -u src/evaluate.py
+    deps:
+      - src/evaluate.py
+      - src/utils/helpers.py
+      - params.yaml
+      - models
+      - data/processed/class_names.json
+      - data/processed/test.json
+    params:
+      - model_choice
+      - image_size
+      - batch_size
+    metrics:
+      - metrics/eval.json
+    plots:
+      - metrics/plots
