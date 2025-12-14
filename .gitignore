@@ -1,10 +1,7 @@
 # DVC-tracked data stays out of Git
-/data/
+/data/raw
 /models/
 /metrics/
-# Allow DVC metadata files
-!data/**/*.dvc
-!data/*.dvc
 
 # Virtual envs
 venv/
