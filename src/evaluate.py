@@ -8,7 +8,7 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 import matplotlib.pyplot as plt
 import yaml
 
-from utils.helpers import read_json, ensure_dir, make_path_label_dataset
+from utils.helpers import read_json, ensure_dir, make_path_label_dataset, write_json
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
@@ -33,7 +33,6 @@ def plot_confusion_matrix(cm: np.ndarray, class_names: List[str], path: str) -> 
 
     plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
 
-    # Labeling the cells
     thresh = cm.max() / 2.0 if cm.max() > 0 else 0.5
     for i in range(cm.shape[0]):
         for j in range(cm.shape[1]):
@@ -47,10 +46,9 @@ def plot_confusion_matrix(cm: np.ndarray, class_names: List[str], path: str) -> 
 
 
 def save_misclassified_grid(images: np.ndarray, true_labels: np.ndarray, pred_labels: np.ndarray,
-                             class_names: List[str], path: str, max_samples: int = 16) -> None:
+                            class_names: List[str], path: str, max_samples: int = 16) -> None:
     wrong_idx = np.where(true_labels != pred_labels)[0]
     if wrong_idx.size == 0:
-        # nothing to plot
         return
     sel = wrong_idx[:max_samples]
     rows = int(np.ceil(len(sel) / 4))
@@ -61,7 +59,6 @@ def save_misclassified_grid(images: np.ndarray, true_labels: np.ndarray, pred_la
         r, c = divmod(i, cols)
         ax = axes[r, c]
         img = images[idx]
-        # If image is preprocessed (e.g., MobileNetV2), attempt simple rescale for display
         if img.min() < 0 or img.max() > 1.5:
             img_disp = (img - img.min()) / (img.max() - img.min() + 1e-7)
         else:
@@ -70,7 +67,6 @@ def save_misclassified_grid(images: np.ndarray, true_labels: np.ndarray, pred_la
         ax.axis('off')
         ax.set_title(f"T: {class_names[true_labels[idx]]}\nP: {class_names[pred_labels[idx]]}")
 
-    # Hide any unused axes
     for j in range(len(sel), rows * cols):
         r, c = divmod(j, cols)
         axes[r, c].axis('off')
@@ -83,87 +79,103 @@ def save_misclassified_grid(images: np.ndarray, true_labels: np.ndarray, pred_la
 
 def main():
     params = load_params()
-    model_choice = str(params.get("model_choice", "cnn")).lower()
+    raw_choice = str(params.get("model_choice", "cnn")).lower().strip()
     image_size = int(params.get("image_size", 32))
     batch_size = int(params.get("batch_size", 64))
+
+    # Interpret model_choice:
+    # - "all" or "*" => evaluate both
+    # - comma-separated list => evaluate listed models
+    if raw_choice in ("all", "*"):
+        models_to_eval = ["cnn", "mobilenetv2"]
+    else:
+        models_to_eval = [m.strip() for m in raw_choice.split(",") if m.strip()]
 
     ensure_dir(METRICS_DIR)
     ensure_dir(PLOTS_DIR)
 
-    # Load manifests
+    # Load manifests once
     class_names = read_json(os.path.join(PROCESSED_DIR, "class_names.json"))["class_names"]
     num_classes = len(class_names)
     test_manifest = read_json(os.path.join(PROCESSED_DIR, "test.json"))
     test_paths, test_labels = test_manifest["paths"], test_manifest["labels"]
 
-    # Choose model & preprocessing
-    if model_choice == "mobilenetv2":
-        model_path = os.path.join(MODELS_DIR, "mobilenetv2.keras")
-        input_size = 96 if image_size < 64 else image_size
-        preprocess = "mobilenet_v2"
-    else:
-        model_path = os.path.join(MODELS_DIR, "cnn.keras")
-        input_size = image_size
-        preprocess = "rescale"
+    if not models_to_eval:
+        raise ValueError("No models selected for evaluation (check params.yaml 'model_choice').")
 
-    if not os.path.isfile(model_path):
-        raise FileNotFoundError(f"Model file not found at {model_path}. Train stage must run before evaluate.")
+    all_eval_metrics = {}
 
-    logging.info(f"Loading model from {model_path}")
-    model = tf.keras.models.load_model(model_path)
+    for model_choice in models_to_eval:
+        # Determine model path, input size and preprocess
+        if model_choice == "mobilenetv2":
+            model_path = os.path.join(MODELS_DIR, "mobilenetv2.keras")
+            input_size = 96 if image_size < 64 else image_size
+            preprocess = "mobilenet_v2"
+        else:
+            model_path = os.path.join(MODELS_DIR, "cnn.keras")
+            input_size = image_size
+            preprocess = "rescale"
 
-    # Build dataset (no augmentation)
-    ds_test = make_path_label_dataset(test_paths, test_labels, input_size, batch_size,
-                                      shuffle=False, preprocess=preprocess, augment=False)
+        if not os.path.isfile(model_path):
+            logging.warning(f"Model file for '{model_choice}' not found at {model_path}. Skipping.")
+            continue
 
-    # Collect predictions and ground truth
-    y_true = []
-    y_pred = []
-    sample_images = []  # for plotting some misclassifications
+        logging.info(f"Loading model '{model_choice}' from {model_path}")
+        model = tf.keras.models.load_model(model_path)
 
-    for batch_imgs, batch_labels in ds_test:
-        preds = model.predict(batch_imgs, verbose=0)
-        preds_cls = np.argmax(preds, axis=1)
-        y_true.extend(batch_labels.numpy().tolist())
-        y_pred.extend(preds_cls.tolist())
-        # collect some images for plotting
-        if len(sample_images) < 64:  # cap memory use
-            sample_images.extend(batch_imgs.numpy())
+        # Build dataset per model (input size / preprocess may differ)
+        ds_test = make_path_label_dataset(test_paths, test_labels, input_size, batch_size,
+                                          shuffle=False, preprocess=preprocess, augment=False)
 
-    y_true = np.array(y_true)
-    y_pred = np.array(y_pred)
+        y_true = []
+        y_pred = []
+        sample_images = []
 
-    # Metrics
-    acc = float(accuracy_score(y_true, y_pred))
-    prec = float(precision_score(y_true, y_pred, average="macro", zero_division=0))
-    rec = float(recall_score(y_true, y_pred, average="macro", zero_division=0))
-    f1 = float(f1_score(y_true, y_pred, average="macro", zero_division=0))
+        for batch_imgs, batch_labels in ds_test:
+            preds = model.predict(batch_imgs, verbose=0)
+            preds_cls = np.argmax(preds, axis=1)
+            y_true.extend(batch_labels.numpy().tolist())
+            y_pred.extend(preds_cls.tolist())
+            if len(sample_images) < 64:
+                sample_images.extend(batch_imgs.numpy())
 
-    # Confusion matrix
-    cm = confusion_matrix(y_true, y_pred, labels=list(range(num_classes)))
-    cm_path = os.path.join(PLOTS_DIR, f"confusion_matrix_{model_choice}.png")
-    plot_confusion_matrix(cm, class_names, cm_path)
+        y_true = np.array(y_true)
+        y_pred = np.array(y_pred)
 
-    # Misclassified grid
-    wrong_path = os.path.join(PLOTS_DIR, f"misclassified_{model_choice}.png")
-    if len(sample_images) > 0:
-        save_misclassified_grid(np.array(sample_images), y_true[:len(sample_images)], y_pred[:len(sample_images)],
-                                class_names, wrong_path, max_samples=16)
+        acc = float(accuracy_score(y_true, y_pred))
+        prec = float(precision_score(y_true, y_pred, average="macro", zero_division=0))
+        rec = float(recall_score(y_true, y_pred, average="macro", zero_division=0))
+        f1 = float(f1_score(y_true, y_pred, average="macro", zero_division=0))
 
-    # Save eval metrics
-    eval_metrics = {
-        "model": model_choice,
-        "accuracy": acc,
-        "precision_macro": prec,
-        "recall_macro": rec,
-        "f1_macro": f1,
-        "confusion_matrix_png": os.path.relpath(cm_path, start="."),
-        "misclassified_png": os.path.relpath(wrong_path, start="."),
-    }
-    ensure_dir(METRICS_DIR)
-    from utils.helpers import write_json
-    write_json(os.path.join(METRICS_DIR, "eval.json"), eval_metrics)
+        cm = confusion_matrix(y_true, y_pred, labels=list(range(num_classes)))
+        cm_path = os.path.join(PLOTS_DIR, f"confusion_matrix_{model_choice}.png")
+        plot_confusion_matrix(cm, class_names, cm_path)
 
+        wrong_path = os.path.join(PLOTS_DIR, f"misclassified_{model_choice}.png")
+        if len(sample_images) > 0:
+            save_misclassified_grid(np.array(sample_images), y_true[:len(sample_images)], y_pred[:len(sample_images)],
+                                    class_names, wrong_path, max_samples=16)
+        else:
+            wrong_path = None
+
+        eval_metrics = {
+            "model": model_choice,
+            "accuracy": acc,
+            "precision_macro": prec,
+            "recall_macro": rec,
+            "f1_macro": f1,
+            "confusion_matrix_png": os.path.relpath(cm_path, start="."),
+            "misclassified_png": os.path.relpath(wrong_path, start=".") if wrong_path else None,
+        }
+
+        all_eval_metrics[model_choice] = eval_metrics
+        logging.info(f"Evaluated '{model_choice}': accuracy={acc:.4f}, f1={f1:.4f}")
+
+    if not all_eval_metrics:
+        raise FileNotFoundError("No models were evaluated (no model files found).")
+
+    # Save a dict with per-model metrics
+    write_json(os.path.join(METRICS_DIR, "eval.json"), all_eval_metrics)
     logging.info(f"Saved evaluation metrics to {os.path.join(METRICS_DIR, 'eval.json')}")
     logging.info("Evaluation stage complete.")
 

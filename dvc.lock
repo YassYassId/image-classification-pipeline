@@ -10,8 +10,8 @@ stages:
       nfiles: 60000
     - path: params.yaml
       hash: md5
-      md5: f046c46653f844ec887ffce64c9b77cb
-      size: 716
+      md5: 87dac1fd847b51aaad049a1f6bbb344f
+      size: 708
     - path: src/prepare.py
       hash: md5
       md5: 1b26eaefb483c30cd637216748081e74
@@ -49,8 +49,8 @@ stages:
       size: 295042
     - path: params.yaml
       hash: md5
-      md5: f046c46653f844ec887ffce64c9b77cb
-      size: 716
+      md5: 28c18319dabaf4f866449812af9b37b4
+      size: 665
     - path: src/train.py
       hash: md5
       md5: 2ba916609e51523d0ff525c40f077ba6
@@ -70,11 +70,11 @@ stages:
     outs:
     - path: metrics/train.json
       hash: md5
-      md5: 152d7e9c3ad2adad0775b18446e7ca87
+      md5: 02c3ed2e72279bcf5e836361c7b7ac27
       size: 590
     - path: models
       hash: md5
-      md5: 349035295e6fe233c1fb410cbe8dd49f.dir
+      md5: 9967f079582a78ea87a5d3df19d2cbfe.dir
       size: 16358412
       nfiles: 2
   evaluate:
@@ -90,17 +90,17 @@ stages:
       size: 580042
     - path: models
       hash: md5
-      md5: 349035295e6fe233c1fb410cbe8dd49f.dir
+      md5: 9967f079582a78ea87a5d3df19d2cbfe.dir
       size: 16358412
       nfiles: 2
     - path: params.yaml
       hash: md5
-      md5: f046c46653f844ec887ffce64c9b77cb
-      size: 716
+      md5: 28c18319dabaf4f866449812af9b37b4
+      size: 665
     - path: src/evaluate.py
       hash: md5
-      md5: a0c3857147889d354b36ea87a57bd53f
-      size: 6633
+      md5: 8b229417a4d1a630e711bddd6660795d
+      size: 7318
     - path: src/utils/helpers.py
       hash: md5
       md5: 2dc214164d221bb4c3d70d8cb07a3a3e
@@ -109,14 +109,14 @@ stages:
       params.yaml:
         batch_size: 64
         image_size: 32
-        model_choice: mobilenetv2
+        model_choice: all
     outs:
     - path: metrics/eval.json
       hash: md5
-      md5: 5b980ab5ddd70a76dd43e0d93b5f1528
-      size: 309
+      md5: 873a548e6ae36c12fb27d0dea9129512
+      size: 673
     - path: metrics/plots
       hash: md5
-      md5: 1524da485e2cfb802fde78ca282aaa9f.dir
-      size: 917109
-      nfiles: 2
+      md5: 98546df7fc91b57572a6c07d9ac5f7f3.dir
+      size: 797812
+      nfiles: 4

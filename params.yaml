@@ -1,5 +1,4 @@
 # Global hyperparameters and options used across DVC stages
-# You can change these and run: dvc repro
 
 # Data/loading
 image_size: 32           # 32 for CNN; MobileNetV2 will internally resize to 96 if needed
@@ -14,5 +13,5 @@ epochs_cnn: 20            # keep small for CPU
 epochs_tl: 15             # transfer learning classifier only, few epochs
 
 # Evaluation
-model_choice: "mobilenetv2"      # one of: ["cnn", "mobilenetv2"]
+model_choice: "all"      # one of: ["cnn", "mobilenetv2"]
 # Set to choose which model to evaluate in the evaluate stage
