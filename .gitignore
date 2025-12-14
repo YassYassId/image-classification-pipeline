@@ -4,6 +4,7 @@
 /metrics/
 # Allow DVC metadata files
 !data/**/*.dvc
+!data/*.dvc
 
 # Virtual envs
 venv/
