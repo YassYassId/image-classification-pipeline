@@ -10,8 +10,8 @@ augment_in_prepare: false  # keep false to save clean processed sets; augmentati
 
 # Training
 learning_rate: 0.001
-epochs_cnn: 12            # keep small for CPU
-epochs_tl: 10             # transfer learning classifier only, few epochs
+epochs_cnn: 20            # keep small for CPU
+epochs_tl: 15             # transfer learning classifier only, few epochs
 
 # Evaluation
 model_choice: "mobilenetv2"      # one of: ["cnn", "mobilenetv2"]
