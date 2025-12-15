@@ -3,3 +3,6 @@
 .dvc/config.local
 env.list
 data/raw
+metrics
+models
+data/processed
