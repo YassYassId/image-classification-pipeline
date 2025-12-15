@@ -1,6 +1,6 @@
 # Rapport – Pipeline CIFAR‑10: MLOps avec DVC, Google Drive et Docker (CPU‑only)
 
-Étudiant(s): IDRISSI Yassine, FANNAN Noussair  
+Étudiants: IDRISSI Yassine, FANNAN Noussair  
 Master SDIA
 
 ---
