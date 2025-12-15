@@ -10,8 +10,8 @@ stages:
       nfiles: 60000
     - path: params.yaml
       hash: md5
-      md5: 87dac1fd847b51aaad049a1f6bbb344f
-      size: 708
+      md5: 28c18319dabaf4f866449812af9b37b4
+      size: 665
     - path: src/prepare.py
       hash: md5
       md5: 1b26eaefb483c30cd637216748081e74
